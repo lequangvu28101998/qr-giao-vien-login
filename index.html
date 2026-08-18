@@ -195,43 +195,110 @@
 
     function handleCredentialResponse(response) {
 
-      if (!response || !response.credential) {
+  if (!response || !response.credential) {
 
-        showError(
-          'Không nhận được thông tin xác thực từ Google.'
-        );
+    showError(
+      'Không nhận được thông tin xác thực từ Google.'
+    );
 
-        return;
-      }
+    return;
+  }
 
+  try {
 
-      setStatus(
-        'Đã chọn tài khoản. Đang xác thực...'
+    /*
+     * Google ID Token là JWT gồm 3 phần:
+     * header.payload.signature
+     *
+     * Ở bước test này chỉ đọc payload
+     * để hiển thị email.
+     *
+     * Không dùng cách này để quyết định quyền
+     * truy cập. Bước xác minh thật sẽ được
+     * thực hiện ở phía máy chủ AUTH.
+     */
+
+    const parts =
+      response.credential.split('.');
+
+    if (parts.length !== 3) {
+      throw new Error(
+        'ID Token không đúng định dạng.'
       );
-
-
-      /*
-       * TẠM THỜI
-       *
-       * Ở bước tiếp theo chúng ta sẽ gửi
-       * response.credential sang
-       * QR Giáo Viên - AUTH để xác minh.
-       *
-       * Chưa chuyển hướng ở đây.
-       */
-
-
-      console.log(
-        'Google ID Token:',
-        response.credential
-      );
-
-
-      setStatus(
-        'Đã nhận tài khoản Google.'
-      );
-
     }
+
+    const payload =
+      JSON.parse(
+        atob(
+          parts[1]
+            .replace(/-/g, '+')
+            .replace(/_/g, '/')
+        )
+      );
+
+    const email =
+      payload.email || '';
+
+    if (!email) {
+      throw new Error(
+        'Không đọc được email từ tài khoản Google.'
+      );
+    }
+
+    setStatus(
+      'Đã chọn tài khoản Google.'
+    );
+
+    document.getElementById('google-login')
+      .style.display = 'none';
+
+    const qrInfo =
+      document.getElementById('qr-id');
+
+    qrInfo.innerHTML =
+      'Mã QR: <strong>' +
+      (qrId || 'Không xác định') +
+      '</strong>';
+
+    const box =
+      document.querySelector('.box');
+
+    const oldAccount =
+      document.getElementById('selected-account');
+
+    if (oldAccount) {
+      oldAccount.remove();
+    }
+
+    const account =
+      document.createElement('div');
+
+    account.id =
+      'selected-account';
+
+    account.style.marginTop = '18px';
+    account.style.padding = '14px';
+    account.style.borderRadius = '10px';
+    account.style.background = '#eef6ff';
+    account.style.color = '#1a73e8';
+    account.style.fontWeight = 'bold';
+
+    account.textContent =
+      'Tài khoản đã chọn: ' + email;
+
+    box.appendChild(account);
+
+  } catch (error) {
+
+    console.error(error);
+
+    showError(
+      'Không thể đọc thông tin tài khoản Google.'
+    );
+
+  }
+
+}
 
 
     /*
