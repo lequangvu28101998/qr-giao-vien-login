@@ -1,100 +1,201 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>QR Giáo Viên</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <title>
+    QR Giáo Viên
+  </title>
+
+
+  <!-- Google Identity Services -->
+
+  <script
+    src="https://accounts.google.com/gsi/client"
+    async
+    defer
+  ></script>
+
 
   <style>
+
     * {
       box-sizing: border-box;
     }
 
+
     body {
+
       margin: 0;
+
       min-height: 100vh;
+
       display: flex;
-      justify-content: center;
+
       align-items: center;
 
-      font-family: Arial, sans-serif;
-      background: #f5f7fa;
+      justify-content: center;
+
+      padding: 24px;
+
+      font-family:
+        Arial,
+        sans-serif;
+
+      background:
+        #f5f7fa;
+
+      color:
+        #222;
+
     }
 
+
     .box {
-      width: min(92%, 460px);
-      background: #ffffff;
-      border-radius: 18px;
-      padding: 40px 30px;
+
+      width: 100%;
+
+      max-width: 430px;
+
+      padding: 32px 28px;
 
       text-align: center;
 
+      background:
+        #ffffff;
+
+      border-radius:
+        18px;
+
       box-shadow:
-        0 4px 20px rgba(0, 0, 0, 0.08);
+        0 4px 18px
+        rgba(0,0,0,0.08);
+
     }
+
 
     .icon {
-      font-size: 52px;
-      margin-bottom: 18px;
+
+      font-size: 46px;
+
+      line-height: 1;
+
+      margin-bottom: 16px;
+
     }
+
 
     h1 {
-      margin: 0 0 12px;
-      font-size: 28px;
-      color: #222;
+
+      margin:
+        0 0 10px;
+
+      font-size:
+        25px;
+
     }
+
 
     .description {
-      margin: 0 0 28px;
-      color: #666;
-      line-height: 1.5;
-      font-size: 15px;
+
+      margin:
+        0 auto 18px;
+
+      color:
+        #666;
+
+      line-height:
+        1.5;
+
+      max-width:
+        340px;
+
     }
 
-    .qr-info {
-      margin-bottom: 25px;
-      padding: 12px 16px;
 
-      background: #f1f5ff;
-      border-radius: 10px;
+    .qr {
 
-      color: #444;
-      font-size: 14px;
+      margin:
+        0 auto 20px;
+
+      padding:
+        12px 16px;
+
+      border-radius:
+        10px;
+
+      background:
+        #eef4ff;
+
+      color:
+        #1769e0;
+
+      font-weight:
+        700;
+
     }
 
-    .qr-info strong {
-      color: #1a73e8;
+
+    #googleButton {
+
+      display:
+        flex;
+
+      justify-content:
+        center;
+
+      min-height:
+        44px;
+
+      margin-top:
+        12px;
+
     }
 
-    #google-login {
-      display: flex;
-      justify-content: center;
-    }
 
     .status {
-      margin-top: 20px;
-      font-size: 14px;
-      color: #777;
-      min-height: 20px;
+
+      min-height:
+        22px;
+
+      margin-top:
+        16px;
+
+      color:
+        #666;
+
+      font-size:
+        14px;
+
     }
+
 
     .error {
-      margin-top: 18px;
-      padding: 12px 14px;
 
-      background: #fff1f1;
-      color: #c62828;
+      color:
+        #c62828;
 
-      border-radius: 10px;
-      font-size: 14px;
-
-      display: none;
     }
+
+
+    .hidden-form {
+
+      display:
+        none;
+
+    }
+
   </style>
+
 </head>
+
 
 <body>
 
@@ -104,291 +205,335 @@
       🔐
     </div>
 
+
     <h1>
       Xác thực tài khoản
     </h1>
 
+
     <p class="description">
-      Vui lòng chọn tài khoản Google để tiếp tục
-      xem hồ sơ giáo viên.
+
+      Vui lòng chọn tài khoản Google
+      để tiếp tục xem hồ sơ giáo viên.
+
     </p>
 
-    <div class="qr-info">
-      Mã QR:
-      <strong id="qr-id">Đang tải...</strong>
+
+    <div
+      class="qr"
+      id="qrText"
+    >
+      Mã QR: Không xác định
     </div>
 
-    <div id="google-login"></div>
 
-    <div class="status" id="status">
-      Đang tải...
-    </div>
+    <div
+      id="googleButton"
+    ></div>
 
-    <div class="error" id="error">
-      Không thể khởi tạo đăng nhập Google.
-    </div>
+
+    <div
+      id="status"
+      class="status"
+    ></div>
+
 
   </div>
+
+
+  <!--
+    Form POST trực tiếp tới MAIN.
+    Không còn gọi QR Giáo Viên - AUTH.
+  -->
+
+  <form
+    id="loginForm"
+    class="hidden-form"
+    method="POST"
+    target="_self"
+  >
+
+    <input
+      type="hidden"
+      name="credential"
+      id="credential"
+    >
+
+
+    <input
+      type="hidden"
+      name="id"
+      id="qrIdInput"
+    >
+
+  </form>
+
 
   <script>
 
     /*
-     * ==========================================
-     * CẤU HÌNH
-     * ==========================================
+     * ========================================================
+     * CONFIG
+     * ========================================================
      */
 
     const GOOGLE_CLIENT_ID =
       '933428971405-4fhinqmfn2m7tkrunheefbqkm64t26og.apps.googleusercontent.com';
 
 
+    const MAIN_WEB_APP_URL =
+      'https://script.google.com/macros/s/AKfycbzLDSjRyXB67zv2NGjF_PohOd3ia2ttfyLwpYu3Ivd7fRwHUKpy4NCdyR7ESHy9F2VH/exec';
+
+
     /*
-     * ==========================================
-     * LẤY QR ID TỪ URL
-     * ==========================================
+     * ========================================================
+     * QR ID
+     * ========================================================
      */
 
     const params =
-      new URLSearchParams(window.location.search);
+      new URLSearchParams(
+        window.location.search
+      );
+
 
     const qrId =
-      params.get('id') || '';
-
-
-    document.getElementById('qr-id').textContent =
-      qrId || 'Không xác định';
+      (
+        params.get('id') ||
+        ''
+      ).trim();
 
 
     /*
-     * ==========================================
-     * HIỂN THỊ THÔNG TIN TRẠNG THÁI
-     * ==========================================
+     * ========================================================
+     * DOM
+     * ========================================================
      */
 
-    function setStatus(message) {
+    const qrText =
+      document.getElementById(
+        'qrText'
+      );
 
-      const status =
-        document.getElementById('status');
 
-      status.textContent = message;
+    const status =
+      document.getElementById(
+        'status'
+      );
+
+
+    const googleButton =
+      document.getElementById(
+        'googleButton'
+      );
+
+
+    const loginForm =
+      document.getElementById(
+        'loginForm'
+      );
+
+
+    const credentialInput =
+      document.getElementById(
+        'credential'
+      );
+
+
+    const qrIdInput =
+      document.getElementById(
+        'qrIdInput'
+      );
+
+
+    /*
+     * ========================================================
+     * STATUS
+     * ========================================================
+     */
+
+    function setStatus(
+      message,
+      isError = false
+    ) {
+
+      status.textContent =
+        message;
+
+      status.className =
+        'status' +
+        (
+          isError
+            ? ' error'
+            : ''
+        );
 
     }
 
 
-    function showError(message) {
+    /*
+     * ========================================================
+     * SUBMIT GOOGLE CREDENTIAL → MAIN
+     * ========================================================
+     */
 
-      const error =
-        document.getElementById('error');
+    function submitToMain(
+      credential
+    ) {
 
-      error.textContent = message;
+      if (!credential) {
 
-      error.style.display = 'block';
+        setStatus(
+          'Không nhận được Google ID Token.',
+          true
+        );
+
+        return;
+
+      }
+
+
+      setStatus(
+        'Đang xác thực tài khoản...'
+      );
+
+
+      credentialInput.value =
+        credential;
+
+
+      qrIdInput.value =
+        qrId;
+
+
+      loginForm.action =
+        MAIN_WEB_APP_URL;
+
+
+      loginForm.submit();
 
     }
 
 
     /*
-     * ==========================================
-     * CALLBACK SAU KHI GOOGLE XÁC THỰC
-     * ==========================================
+     * ========================================================
+     * GOOGLE LOGIN
+     * ========================================================
      */
 
-    function handleCredentialResponse(response) {
-
-  if (!response || !response.credential) {
-
-    showError(
-      'Không nhận được thông tin xác thực từ Google.'
-    );
-
-    return;
-  }
-
-  setStatus(
-    'Đang xác thực tài khoản...'
-  );
-
-
-  /*
-   * URL Web App AUTH
-   */
-  const AUTH_WEB_APP_URL =
-    'https://script.google.com/macros/s/AKfycbxxJQ4IIamo7imaqrm-jF2eVqlDRcylOFt61ekfS_KgKS7bNSc7kxjqvzoHcld7urWIjQ/exec';
-
-
-  /*
-   * Tạo form POST ẩn.
-   *
-   * Không dùng fetch() để tránh lỗi CORS
-   * khi gửi từ GitHub Pages sang Apps Script.
-   */
-  const form =
-    document.createElement('form');
-
-  form.method = 'POST';
-
-  form.action =
-    AUTH_WEB_APP_URL;
-
-  form.target =
-    '_self';
-
-
-  /*
-   * Google ID Token
-   */
-  const credentialInput =
-    document.createElement('input');
-
-  credentialInput.type =
-    'hidden';
-
-  credentialInput.name =
-    'credential';
-
-  credentialInput.value =
-    response.credential;
-
-
-  /*
-   * QR ID
-   */
-  const qrInput =
-    document.createElement('input');
-
-  qrInput.type =
-    'hidden';
-
-  qrInput.name =
-    'id';
-
-  qrInput.value =
-    qrId;
-
-
-  /*
-   * Gắn vào form
-   */
-  form.appendChild(
-    credentialInput
-  );
-
-  form.appendChild(
-    qrInput
-  );
-
-
-  /*
-   * Gắn form vào trang
-   */
-  document.body.appendChild(
-    form
-  );
-
-
-  /*
-   * Gửi POST sang AUTH
-   */
-  form.submit();
-}
-
-
-    /*
-     * ==========================================
-     * KHỞI TẠO GOOGLE IDENTITY SERVICES
-     * ==========================================
-     */
-
-    function initializeGoogleLogin() {
+    function initGoogleLogin() {
 
       if (
-        typeof google === 'undefined' ||
+        !window.google ||
         !google.accounts ||
         !google.accounts.id
       ) {
 
-        showError(
-          'Google Identity Services chưa tải xong.'
+        setStatus(
+          'Không tải được Google Login. Vui lòng tải lại trang.',
+          true
         );
 
         return;
-      }
 
-
-      if (
-        !GOOGLE_CLIENT_ID ||
-        GOOGLE_CLIENT_ID ===
-          'YOUR_CLIENT_ID.apps.googleusercontent.com'
-      ) {
-
-        showError(
-          'Chưa cấu hình Google Client ID.'
-        );
-
-        setStatus('');
-
-        return;
       }
 
 
       google.accounts.id.initialize({
 
-        client_id: GOOGLE_CLIENT_ID,
+        client_id:
+          GOOGLE_CLIENT_ID,
 
         callback:
-          handleCredentialResponse,
+          function(response) {
 
-        auto_select: false,
+            submitToMain(
+              response.credential
+            );
 
-        cancel_on_tap_outside: false
+          },
+
+        auto_select:
+          false,
+
+        cancel_on_tap_outside:
+          true
 
       });
 
 
       google.accounts.id.renderButton(
 
-        document.getElementById(
-          'google-login'
-        ),
+        googleButton,
 
         {
-          theme: 'outline',
-          size: 'large',
-          shape: 'rectangular',
-          text: 'signin_with',
-          logo_alignment: 'left',
-          width: 300
+
+          type:
+            'standard',
+
+          theme:
+            'outline',
+
+          size:
+            'large',
+
+          text:
+            'signin_with',
+
+          shape:
+            'rectangular',
+
+          logo_alignment:
+            'left',
+
+          width:
+            320
+
         }
 
-      );
-
-
-      setStatus(
-        'Vui lòng chọn tài khoản Google.'
       );
 
     }
 
 
     /*
-     * ==========================================
-     * CHỜ GOOGLE GIS TẢI
-     * ==========================================
+     * ========================================================
+     * INIT
+     * ========================================================
      */
 
-    window.addEventListener(
-      'load',
-      function () {
+    if (!qrId) {
 
-        setTimeout(
-          initializeGoogleLogin,
-          500
-        );
+      qrText.textContent =
+        'Mã QR: Không xác định';
 
-      }
-    );
+
+      setStatus(
+        'Thiếu mã QR. Vui lòng mở lại từ mã QR hợp lệ.',
+        true
+      );
+
+    } else {
+
+      qrText.textContent =
+        'Mã QR: ' +
+        qrId;
+
+
+      setStatus(
+        ''
+      );
+
+
+      window.addEventListener(
+        'load',
+        initGoogleLogin
+      );
+
+    }
 
   </script>
 
 </body>
+
 </html>
