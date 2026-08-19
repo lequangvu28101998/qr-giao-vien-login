@@ -204,100 +204,81 @@
     return;
   }
 
-  try {
+  setStatus(
+    'Đang xác thực tài khoản...'
+  );
 
-    /*
-     * Google ID Token là JWT gồm 3 phần:
-     * header.payload.signature
-     *
-     * Ở bước test này chỉ đọc payload
-     * để hiển thị email.
-     *
-     * Không dùng cách này để quyết định quyền
-     * truy cập. Bước xác minh thật sẽ được
-     * thực hiện ở phía máy chủ AUTH.
-     */
+  /*
+   * URL Web App AUTH
+   */
+  const AUTH_WEB_APP_URL =
+    'https://script.google.com/macros/s/AKfycbxxJQ4IIamo7imaqrm-jF2eVqlDRcylOFt61ekfS_KgKS7bNSc7kxjqvzoHcld7urWIjQ/exec';
 
-    const parts =
-      response.credential.split('.');
 
-    if (parts.length !== 3) {
-      throw new Error(
-        'ID Token không đúng định dạng.'
-      );
+  /*
+   * Gửi Google ID Token + QR ID sang AUTH
+   */
+  const formData = new URLSearchParams();
+
+  formData.append(
+    'credential',
+    response.credential
+  );
+
+  formData.append(
+    'id',
+    qrId
+  );
+
+
+  fetch(
+    AUTH_WEB_APP_URL,
+    {
+      method: 'POST',
+
+      headers: {
+        'Content-Type':
+          'application/x-www-form-urlencoded;charset=UTF-8'
+      },
+
+      body: formData.toString()
     }
+  )
 
-    const payload =
-      JSON.parse(
-        atob(
-          parts[1]
-            .replace(/-/g, '+')
-            .replace(/_/g, '/')
-        )
+    .then(async response => {
+
+      const html =
+        await response.text();
+
+      /*
+       * AUTH trả về HTML.
+       *
+       * Mình thay toàn bộ nội dung trang
+       * bằng kết quả AUTH trả về.
+       */
+
+      document.open();
+
+      document.write(html);
+
+      document.close();
+
+    })
+
+    .catch(error => {
+
+      console.error(
+        'Lỗi kết nối AUTH:',
+        error
       );
 
-    const email =
-      payload.email || '';
-
-    if (!email) {
-      throw new Error(
-        'Không đọc được email từ tài khoản Google.'
+      showError(
+        'Không thể kết nối đến hệ thống xác thực.'
       );
-    }
 
-    setStatus(
-      'Đã chọn tài khoản Google.'
-    );
+      setStatus('');
 
-    document.getElementById('google-login')
-      .style.display = 'none';
-
-    const qrInfo =
-      document.getElementById('qr-id');
-
-    qrInfo.innerHTML =
-      'Mã QR: <strong>' +
-      (qrId || 'Không xác định') +
-      '</strong>';
-
-    const box =
-      document.querySelector('.box');
-
-    const oldAccount =
-      document.getElementById('selected-account');
-
-    if (oldAccount) {
-      oldAccount.remove();
-    }
-
-    const account =
-      document.createElement('div');
-
-    account.id =
-      'selected-account';
-
-    account.style.marginTop = '18px';
-    account.style.padding = '14px';
-    account.style.borderRadius = '10px';
-    account.style.background = '#eef6ff';
-    account.style.color = '#1a73e8';
-    account.style.fontWeight = 'bold';
-
-    account.textContent =
-      'Tài khoản đã chọn: ' + email;
-
-    box.appendChild(account);
-
-  } catch (error) {
-
-    console.error(error);
-
-    showError(
-      'Không thể đọc thông tin tài khoản Google.'
-    );
-
-  }
-
+    });
 }
 
 
