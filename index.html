@@ -208,6 +208,7 @@
     'Đang xác thực tài khoản...'
   );
 
+
   /*
    * URL Web App AUTH
    */
@@ -216,69 +217,79 @@
 
 
   /*
-   * Gửi Google ID Token + QR ID sang AUTH
+   * Tạo form POST ẩn.
+   *
+   * Không dùng fetch() để tránh lỗi CORS
+   * khi gửi từ GitHub Pages sang Apps Script.
    */
-  const formData = new URLSearchParams();
+  const form =
+    document.createElement('form');
 
-  formData.append(
-    'credential',
-    response.credential
+  form.method = 'POST';
+
+  form.action =
+    AUTH_WEB_APP_URL;
+
+  form.target =
+    '_self';
+
+
+  /*
+   * Google ID Token
+   */
+  const credentialInput =
+    document.createElement('input');
+
+  credentialInput.type =
+    'hidden';
+
+  credentialInput.name =
+    'credential';
+
+  credentialInput.value =
+    response.credential;
+
+
+  /*
+   * QR ID
+   */
+  const qrInput =
+    document.createElement('input');
+
+  qrInput.type =
+    'hidden';
+
+  qrInput.name =
+    'id';
+
+  qrInput.value =
+    qrId;
+
+
+  /*
+   * Gắn vào form
+   */
+  form.appendChild(
+    credentialInput
   );
 
-  formData.append(
-    'id',
-    qrId
+  form.appendChild(
+    qrInput
   );
 
 
-  fetch(
-    AUTH_WEB_APP_URL,
-    {
-      method: 'POST',
+  /*
+   * Gắn form vào trang
+   */
+  document.body.appendChild(
+    form
+  );
 
-      headers: {
-        'Content-Type':
-          'application/x-www-form-urlencoded;charset=UTF-8'
-      },
 
-      body: formData.toString()
-    }
-  )
-
-    .then(async response => {
-
-      const html =
-        await response.text();
-
-      /*
-       * AUTH trả về HTML.
-       *
-       * Mình thay toàn bộ nội dung trang
-       * bằng kết quả AUTH trả về.
-       */
-
-      document.open();
-
-      document.write(html);
-
-      document.close();
-
-    })
-
-    .catch(error => {
-
-      console.error(
-        'Lỗi kết nối AUTH:',
-        error
-      );
-
-      showError(
-        'Không thể kết nối đến hệ thống xác thực.'
-      );
-
-      setStatus('');
-
-    });
+  /*
+   * Gửi POST sang AUTH
+   */
+  form.submit();
 }
 
 
