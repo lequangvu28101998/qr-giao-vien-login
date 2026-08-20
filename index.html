@@ -406,16 +406,19 @@ function handleSessionCallback() {
   ) {
 
     const mainUrl =
-      MAIN_WEB_APP_URL +
-      '?id=' +
-      encodeURIComponent(
-        callbackQrId
-      ) +
-      '&token=' +
-      encodeURIComponent(
-        callbackToken
-      );
-
+  MAIN_WEB_APP_URL +
+  '?id=' +
+  encodeURIComponent(
+    callbackQrId
+  ) +
+  '&token=' +
+  encodeURIComponent(
+    callbackToken
+  ) +
+  '&session=' +
+  encodeURIComponent(
+    sessionToken
+  );
 
     window.location.replace(
       mainUrl
