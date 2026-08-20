@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    QR Giáo Viên - Admin
+  </title>
+
+
+  <!-- Google Identity Services -->
+
+  <script
+    src="https://accounts.google.com/gsi/client"
+    async
+    defer
+  ></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    body {
+
+      margin: 0;
+
+      min-height: 100vh;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      padding: 24px;
+
+      font-family:
+        Arial,
+        sans-serif;
+
+      background:
+        #f5f7fa;
+
+      color:
+        #222;
+
+    }
+
+
+    .box {
+
+      width: 100%;
+
+      max-width: 430px;
+
+      padding: 32px 28px;
+
+      text-align: center;
+
+      background:
+        #ffffff;
+
+      border-radius:
+        18px;
+
+      box-shadow:
+        0 4px 18px
+        rgba(0,0,0,0.08);
+
+    }
+
+
+    .icon {
+
+      font-size: 46px;
+
+      line-height: 1;
+
+      margin-bottom: 16px;
+
+    }
+
+
+    h1 {
+
+      margin:
+        0 0 10px;
+
+      font-size:
+        25px;
+
+    }
+
+
+    .description {
+
+      margin:
+        0 auto 18px;
+
+      color:
+        #666;
+
+      line-height:
+        1.5;
+
+      max-width:
+        340px;
+
+    }
+
+
+    #googleButton {
+
+      display:
+        flex;
+
+      justify-content:
+        center;
+
+      min-height:
+        44px;
+
+      margin-top:
+        18px;
+
+    }
+
+
+    .status {
+
+      min-height:
+        22px;
+
+      margin-top:
+        16px;
+
+      color:
+        #666;
+
+      font-size:
+        14px;
+
+    }
+
+
+    .error {
+
+      color:
+        #c62828;
+
+    }
+
+
+    .hidden-form {
+
+      display:
+        none;
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+  <div class="box">
+
+    <div class="icon">
+      👨‍💼
+    </div>
+
+
+    <h1>
+      Admin Dashboard
+    </h1>
+
+
+    <p class="description">
+
+      Vui lòng đăng nhập bằng
+      tài khoản quản trị viên.
+
+    </p>
+
+
+    <div
+      id="googleButton"
+    ></div>
+
+
+    <div
+      id="status"
+      class="status"
+    ></div>
+
+  </div>
+
+
+  <!--
+    Form POST trực tiếp tới MAIN.
+  -->
+
+  <form
+    id="loginForm"
+    class="hidden-form"
+    method="POST"
+    target="_self"
+  >
+
+    <input
+      type="hidden"
+      name="credential"
+      id="credential"
+    >
+
+
+    <input
+      type="hidden"
+      name="mode"
+      value="admin"
+    >
+
+  </form>
+
+
+  <script>
+
+    /*
+     * ========================================================
+     * CONFIG
+     * ========================================================
+     */
+
+    const GOOGLE_CLIENT_ID =
+      '933428971405-4fhinqmfn2m7tkrunheefbqkm64t26og.apps.googleusercontent.com';
+
+
+    const MAIN_WEB_APP_URL =
+      'https://script.google.com/macros/s/AKfycbzLDSjRyXB67zv2NGjF_PohOd3ia2ttfyLwpYu3Ivd7fRwHUKpy4NCdyR7ESHy9F2VH/exec';
+
+
+    /*
+     * ========================================================
+     * DOM
+     * ========================================================
+     */
+
+    const googleButton =
+      document.getElementById(
+        'googleButton'
+      );
+
+
+    const status =
+      document.getElementById(
+        'status'
+      );
+
+
+    const loginForm =
+      document.getElementById(
+        'loginForm'
+      );
+
+
+    const credentialInput =
+      document.getElementById(
+        'credential'
+      );
+
+
+    /*
+     * ========================================================
+     * STATUS
+     * ========================================================
+     */
+
+    function setStatus(
+      message,
+      isError = false
+    ) {
+
+      status.textContent =
+        message;
+
+      status.className =
+        'status' +
+        (
+          isError
+            ? ' error'
+            : ''
+        );
+
+    }
+
+
+    /*
+     * ========================================================
+     * SUBMIT GOOGLE CREDENTIAL → MAIN
+     * ========================================================
+     */
+
+    function submitToMain(
+      credential
+    ) {
+
+      if (!credential) {
+
+        setStatus(
+          'Không nhận được Google ID Token.',
+          true
+        );
+
+        return;
+
+      }
+
+
+      setStatus(
+        'Đang xác thực tài khoản quản trị...'
+      );
+
+
+      credentialInput.value =
+        credential;
+
+
+      loginForm.action =
+        MAIN_WEB_APP_URL;
+
+
+      loginForm.submit();
+
+    }
+
+
+    /*
+     * ========================================================
+     * GOOGLE LOGIN
+     * ========================================================
+     */
+
+    function initGoogleLogin() {
+
+      if (
+        !window.google ||
+        !google.accounts ||
+        !google.accounts.id
+      ) {
+
+        setStatus(
+          'Không tải được Google Login. Vui lòng tải lại trang.',
+          true
+        );
+
+        return;
+
+      }
+
+
+      google.accounts.id.initialize({
+
+        client_id:
+          GOOGLE_CLIENT_ID,
+
+        callback:
+          function(response) {
+
+            submitToMain(
+              response.credential
+            );
+
+          },
+
+        /*
+         * Admin chủ động chọn tài khoản.
+         */
+        auto_select:
+          false,
+
+        cancel_on_tap_outside:
+          true
+
+      });
+
+
+      google.accounts.id.renderButton(
+
+        googleButton,
+
+        {
+
+          type:
+            'standard',
+
+          theme:
+            'outline',
+
+          size:
+            'large',
+
+          text:
+            'signin_with',
+
+          shape:
+            'rectangular',
+
+          logo_alignment:
+            'left',
+
+          width:
+            320
+
+        }
+
+      );
+
+    }
+
+
+    /*
+     * ========================================================
+     * INIT
+     * ========================================================
+     */
+
+    window.addEventListener(
+      'load',
+      initGoogleLogin
+    );
+
+  </script>
+
+</body>
+
+</html>
