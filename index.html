@@ -237,7 +237,6 @@
       class="status"
     ></div>
 
-
   </div>
 
 
@@ -303,135 +302,7 @@
         ''
       ).trim();
 
-/*
- * ========================================================
- * SESSION CALLBACK
- * ========================================================
- *
- * MAIN sẽ trả về GitHub bằng:
- *
- * #session=...
- * &id=...
- * &token=...
- *
- * GitHub đọc session từ hash và lưu vào localStorage.
- */
 
-function handleSessionCallback() {
-
-  const hash =
-    window.location.hash;
-
-
-  if (
-    !hash ||
-    hash.length <= 1
-  ) {
-
-    return false;
-
-  }
-
-
-  const hashParams =
-    new URLSearchParams(
-      hash.substring(1)
-    );
-
-
-  const sessionToken =
-    (
-      hashParams.get('session') ||
-      ''
-    ).trim();
-
-
-  const callbackQrId =
-    (
-      hashParams.get('id') ||
-      ''
-    ).trim();
-
-
-  const callbackToken =
-    (
-      hashParams.get('token') ||
-      ''
-    ).trim();
-
-
-  /*
-   * Không có session callback
-   * → không làm gì.
-   */
-
-  if (!sessionToken) {
-
-    return false;
-
-  }
-
-
-  /*
-   * Lưu Session Token.
-   */
-
-  try {
-
-    localStorage.setItem(
-      'QR_TEACHER_SESSION',
-      sessionToken
-    );
-
-  } catch (error) {
-
-    setStatus(
-      'Không thể lưu phiên đăng nhập.',
-      true
-    );
-
-    return true;
-
-  }
-
-
-  /*
-   * Nếu MAIN gửi kèm QR Token,
-   * mở lại đúng QR hiện tại.
-   */
-
-  if (
-    callbackQrId &&
-    callbackToken
-  ) {
-
-    const mainUrl =
-  MAIN_WEB_APP_URL +
-  '?id=' +
-  encodeURIComponent(
-    callbackQrId
-  ) +
-  '&token=' +
-  encodeURIComponent(
-    callbackToken
-  ) +
-  '&session=' +
-  encodeURIComponent(
-    sessionToken
-  );
-
-    window.location.replace(
-      mainUrl
-    );
-
-    return true;
-
-  }
-
-
-  return true;
-
-}
     /*
      * ========================================================
      * DOM
@@ -495,6 +366,242 @@ function handleSessionCallback() {
             ? ' error'
             : ''
         );
+
+    }
+
+
+    /*
+     * ========================================================
+     * SESSION CALLBACK
+     * ========================================================
+     *
+     * MAIN sẽ trả về GitHub bằng:
+     *
+     * #session=...
+     * &id=...
+     * &token=...
+     *
+     * GitHub:
+     * 1. đọc session
+     * 2. lưu localStorage
+     * 3. mở lại MAIN
+     */
+
+    function handleSessionCallback() {
+
+      const hash =
+        window.location.hash;
+
+
+      if (
+        !hash ||
+        hash.length <= 1
+      ) {
+
+        return false;
+
+      }
+
+
+      const hashParams =
+        new URLSearchParams(
+          hash.substring(1)
+        );
+
+
+      const sessionToken =
+        (
+          hashParams.get('session') ||
+          ''
+        ).trim();
+
+
+      const callbackQrId =
+        (
+          hashParams.get('id') ||
+          ''
+        ).trim();
+
+
+      const callbackToken =
+        (
+          hashParams.get('token') ||
+          ''
+        ).trim();
+
+
+      /*
+       * Không có session callback.
+       */
+
+      if (!sessionToken) {
+
+        return false;
+
+      }
+
+
+      /*
+       * Lưu session vào trình duyệt.
+       */
+
+      try {
+
+        localStorage.setItem(
+          'QR_TEACHER_SESSION',
+          sessionToken
+        );
+
+      } catch (error) {
+
+        setStatus(
+          'Không thể lưu phiên đăng nhập.',
+          true
+        );
+
+        return true;
+
+      }
+
+
+      /*
+       * Xóa hash khỏi URL sau khi đã lấy token.
+       *
+       * Không ảnh hưởng dữ liệu đang dùng.
+       */
+
+      try {
+
+        history.replaceState(
+          null,
+          '',
+          window.location.pathname +
+          window.location.search
+        );
+
+      } catch (error) {
+
+        console.warn(
+          'Không thể xóa session hash:',
+          error
+        );
+
+      }
+
+
+      /*
+       * MAIN gửi cả QR Token:
+       * → mở lại đúng QR hiện tại.
+       */
+
+      if (
+        callbackQrId &&
+        callbackToken
+      ) {
+
+        const mainUrl =
+          MAIN_WEB_APP_URL +
+          '?id=' +
+          encodeURIComponent(
+            callbackQrId
+          ) +
+          '&token=' +
+          encodeURIComponent(
+            callbackToken
+          ) +
+          '&session=' +
+          encodeURIComponent(
+            sessionToken
+          );
+
+
+        window.location.replace(
+          mainUrl
+        );
+
+
+        return true;
+
+      }
+
+
+      return true;
+
+    }
+
+
+    /*
+     * ========================================================
+     * EXISTING SESSION
+     * ========================================================
+     */
+
+    function openWithExistingSession() {
+
+      let sessionToken = '';
+
+
+      try {
+
+        sessionToken =
+          (
+            localStorage.getItem(
+              'QR_TEACHER_SESSION'
+            ) || ''
+          ).trim();
+
+      } catch (error) {
+
+        console.error(
+          'Không thể đọc session:',
+          error
+        );
+
+        return false;
+
+      }
+
+
+      /*
+       * Không có Session
+       * → tiếp tục Google Login.
+       */
+
+      if (!sessionToken) {
+
+        return false;
+
+      }
+
+
+      /*
+       * Có Session
+       * → mở MAIN bằng Session.
+       */
+
+      setStatus(
+        'Đang mở hồ sơ...'
+      );
+
+
+      const mainUrl =
+        MAIN_WEB_APP_URL +
+        '?id=' +
+        encodeURIComponent(
+          qrId
+        ) +
+        '&session=' +
+        encodeURIComponent(
+          sessionToken
+        );
+
+
+      window.location.replace(
+        mainUrl
+      );
+
+
+      return true;
 
     }
 
@@ -632,60 +739,80 @@ function handleSessionCallback() {
 
     if (!qrId) {
 
-  qrText.textContent =
-    'Mã QR: Không xác định';
+      qrText.textContent =
+        'Mã QR: Không xác định';
 
 
-  setStatus(
-    'Thiếu mã QR. Vui lòng mở lại từ mã QR hợp lệ.',
-    true
-  );
+      setStatus(
+        'Thiếu mã QR. Vui lòng mở lại từ mã QR hợp lệ.',
+        true
+      );
 
-} else {
+    } else {
 
-  qrText.textContent =
-    'Mã QR: ' +
-    qrId;
-
-
-  setStatus(
-    ''
-  );
+      qrText.textContent =
+        'Mã QR: ' +
+        qrId;
 
 
-  window.addEventListener(
-    'load',
-    function() {
-
-      /*
-       * Ưu tiên xử lý Session Callback
-       * trước khi khởi tạo Google Login.
-       */
-
-      const handled =
-        handleSessionCallback();
+      setStatus(
+        ''
+      );
 
 
-      if (
-        handled
-      ) {
+      window.addEventListener(
+        'load',
+        function() {
 
-        return;
+          /*
+           * 1. MAIN vừa redirect về GitHub
+           *    sau lần Google Login đầu tiên.
+           */
 
-      }
+          const handledCallback =
+            handleSessionCallback();
 
 
-      /*
-       * Chưa có Session Callback
-       * → tiếp tục Google Login bình thường.
-       */
+          if (
+            handledCallback
+          ) {
 
-      initGoogleLogin();
+            return;
+
+          }
+
+
+          /*
+           * 2. Không có callback.
+           *
+           * Kiểm tra Session đã lưu.
+           */
+
+          const handledSession =
+            openWithExistingSession();
+
+
+          if (
+            handledSession
+          ) {
+
+            return;
+
+          }
+
+
+          /*
+           * 3. Không có Session.
+           *
+           * Hiển thị Google Login.
+           */
+
+          initGoogleLogin();
+
+        }
+      );
 
     }
-  );
-
-}
 
   </script>
 
