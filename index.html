@@ -10,9 +10,7 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>
-    QR Giáo Viên
-  </title>
+  <title>QR Giáo Viên</title>
 
 
   <!-- Google Identity Services -->
@@ -71,8 +69,7 @@
       background:
         #ffffff;
 
-      border-radius:
-        18px;
+      border-radius: 18px;
 
       box-shadow:
         0 4px 18px
@@ -97,8 +94,7 @@
       margin:
         0 0 10px;
 
-      font-size:
-        25px;
+      font-size: 25px;
 
     }
 
@@ -108,14 +104,11 @@
       margin:
         0 auto 18px;
 
-      color:
-        #666;
+      color: #666;
 
-      line-height:
-        1.5;
+      line-height: 1.5;
 
-      max-width:
-        340px;
+      max-width: 340px;
 
     }
 
@@ -128,67 +121,53 @@
       padding:
         12px 16px;
 
-      border-radius:
-        10px;
+      border-radius: 10px;
 
-      background:
-        #eef4ff;
+      background: #eef4ff;
 
-      color:
-        #1769e0;
+      color: #1769e0;
 
-      font-weight:
-        700;
+      font-weight: 700;
 
     }
 
 
     #googleButton {
 
-      display:
-        flex;
+      display: flex;
 
-      justify-content:
-        center;
+      justify-content: center;
 
-      min-height:
-        44px;
+      min-height: 44px;
 
-      margin-top:
-        12px;
+      margin-top: 12px;
 
     }
 
 
     .status {
 
-      min-height:
-        22px;
+      min-height: 22px;
 
-      margin-top:
-        16px;
+      margin-top: 16px;
 
-      color:
-        #666;
+      color: #666;
 
-      font-size:
-        14px;
+      font-size: 14px;
 
     }
 
 
     .error {
 
-      color:
-        #c62828;
+      color: #c62828;
 
     }
 
 
     .hidden-form {
 
-      display:
-        none;
+      display: none;
 
     }
 
@@ -212,10 +191,8 @@
 
 
     <p class="description">
-
       Vui lòng chọn tài khoản Google
       để tiếp tục xem hồ sơ giáo viên.
-
     </p>
 
 
@@ -257,7 +234,6 @@
       name="credential"
       id="credential"
     >
-
 
     <input
       type="hidden"
@@ -372,242 +348,6 @@
 
     /*
      * ========================================================
-     * SESSION CALLBACK
-     * ========================================================
-     *
-     * MAIN sẽ trả về GitHub bằng:
-     *
-     * #session=...
-     * &id=...
-     * &token=...
-     *
-     * GitHub:
-     * 1. đọc session
-     * 2. lưu localStorage
-     * 3. mở lại MAIN
-     */
-
-    function handleSessionCallback() {
-
-      const hash =
-        window.location.hash;
-
-
-      if (
-        !hash ||
-        hash.length <= 1
-      ) {
-
-        return false;
-
-      }
-
-
-      const hashParams =
-        new URLSearchParams(
-          hash.substring(1)
-        );
-
-
-      const sessionToken =
-        (
-          hashParams.get('session') ||
-          ''
-        ).trim();
-
-
-      const callbackQrId =
-        (
-          hashParams.get('id') ||
-          ''
-        ).trim();
-
-
-      const callbackToken =
-        (
-          hashParams.get('token') ||
-          ''
-        ).trim();
-
-
-      /*
-       * Không có session callback.
-       */
-
-      if (!sessionToken) {
-
-        return false;
-
-      }
-
-
-      /*
-       * Lưu session vào trình duyệt.
-       */
-
-      try {
-
-        localStorage.setItem(
-          'QR_TEACHER_SESSION',
-          sessionToken
-        );
-
-      } catch (error) {
-
-        setStatus(
-          'Không thể lưu phiên đăng nhập.',
-          true
-        );
-
-        return true;
-
-      }
-
-
-      /*
-       * Xóa hash khỏi URL sau khi đã lấy token.
-       *
-       * Không ảnh hưởng dữ liệu đang dùng.
-       */
-
-      try {
-
-        history.replaceState(
-          null,
-          '',
-          window.location.pathname +
-          window.location.search
-        );
-
-      } catch (error) {
-
-        console.warn(
-          'Không thể xóa session hash:',
-          error
-        );
-
-      }
-
-
-      /*
-       * MAIN gửi cả QR Token:
-       * → mở lại đúng QR hiện tại.
-       */
-
-      if (
-        callbackQrId &&
-        callbackToken
-      ) {
-
-        const mainUrl =
-          MAIN_WEB_APP_URL +
-          '?id=' +
-          encodeURIComponent(
-            callbackQrId
-          ) +
-          '&token=' +
-          encodeURIComponent(
-            callbackToken
-          ) +
-          '&session=' +
-          encodeURIComponent(
-            sessionToken
-          );
-
-
-        window.location.replace(
-          mainUrl
-        );
-
-
-        return true;
-
-      }
-
-
-      return true;
-
-    }
-
-
-    /*
-     * ========================================================
-     * EXISTING SESSION
-     * ========================================================
-     */
-
-    function openWithExistingSession() {
-
-      let sessionToken = '';
-
-
-      try {
-
-        sessionToken =
-          (
-            localStorage.getItem(
-              'QR_TEACHER_SESSION'
-            ) || ''
-          ).trim();
-
-      } catch (error) {
-
-        console.error(
-          'Không thể đọc session:',
-          error
-        );
-
-        return false;
-
-      }
-
-
-      /*
-       * Không có Session
-       * → tiếp tục Google Login.
-       */
-
-      if (!sessionToken) {
-
-        return false;
-
-      }
-
-
-      /*
-       * Có Session
-       * → mở MAIN bằng Session.
-       */
-
-      setStatus(
-        'Đang mở hồ sơ...'
-      );
-
-
-      const mainUrl =
-        MAIN_WEB_APP_URL +
-        '?id=' +
-        encodeURIComponent(
-          qrId
-        ) +
-        '&session=' +
-        encodeURIComponent(
-          sessionToken
-        );
-
-
-      window.location.replace(
-        mainUrl
-      );
-
-
-      return true;
-
-    }
-
-
-    /*
-     * ========================================================
      * SUBMIT GOOGLE CREDENTIAL → MAIN
      * ========================================================
      */
@@ -688,8 +428,13 @@
 
           },
 
+        /*
+         * Mỗi lần mở QR,
+         * người dùng chủ động chọn tài khoản.
+         */
+
         auto_select:
-          true,
+          false,
 
         cancel_on_tap_outside:
           true
@@ -762,54 +507,7 @@
 
       window.addEventListener(
         'load',
-        function() {
-
-          /*
-           * 1. MAIN vừa redirect về GitHub
-           *    sau lần Google Login đầu tiên.
-           */
-
-          const handledCallback =
-            handleSessionCallback();
-
-
-          if (
-            handledCallback
-          ) {
-
-            return;
-
-          }
-
-
-          /*
-           * 2. Không có callback.
-           *
-           * Kiểm tra Session đã lưu.
-           */
-
-          const handledSession =
-            openWithExistingSession();
-
-
-          if (
-            handledSession
-          ) {
-
-            return;
-
-          }
-
-
-          /*
-           * 3. Không có Session.
-           *
-           * Hiển thị Google Login.
-           */
-
-          initGoogleLogin();
-
-        }
+        initGoogleLogin
       );
 
     }
