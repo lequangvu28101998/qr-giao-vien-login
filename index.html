@@ -303,7 +303,132 @@
         ''
       ).trim();
 
+/*
+ * ========================================================
+ * SESSION CALLBACK
+ * ========================================================
+ *
+ * MAIN sẽ trả về GitHub bằng:
+ *
+ * #session=...
+ * &id=...
+ * &token=...
+ *
+ * GitHub đọc session từ hash và lưu vào localStorage.
+ */
 
+function handleSessionCallback() {
+
+  const hash =
+    window.location.hash;
+
+
+  if (
+    !hash ||
+    hash.length <= 1
+  ) {
+
+    return false;
+
+  }
+
+
+  const hashParams =
+    new URLSearchParams(
+      hash.substring(1)
+    );
+
+
+  const sessionToken =
+    (
+      hashParams.get('session') ||
+      ''
+    ).trim();
+
+
+  const callbackQrId =
+    (
+      hashParams.get('id') ||
+      ''
+    ).trim();
+
+
+  const callbackToken =
+    (
+      hashParams.get('token') ||
+      ''
+    ).trim();
+
+
+  /*
+   * Không có session callback
+   * → không làm gì.
+   */
+
+  if (!sessionToken) {
+
+    return false;
+
+  }
+
+
+  /*
+   * Lưu Session Token.
+   */
+
+  try {
+
+    localStorage.setItem(
+      'QR_TEACHER_SESSION',
+      sessionToken
+    );
+
+  } catch (error) {
+
+    setStatus(
+      'Không thể lưu phiên đăng nhập.',
+      true
+    );
+
+    return true;
+
+  }
+
+
+  /*
+   * Nếu MAIN gửi kèm QR Token,
+   * mở lại đúng QR hiện tại.
+   */
+
+  if (
+    callbackQrId &&
+    callbackToken
+  ) {
+
+    const mainUrl =
+      MAIN_WEB_APP_URL +
+      '?id=' +
+      encodeURIComponent(
+        callbackQrId
+      ) +
+      '&token=' +
+      encodeURIComponent(
+        callbackToken
+      );
+
+
+    window.location.replace(
+      mainUrl
+    );
+
+    return true;
+
+  }
+
+
+  return true;
+
+}
     /*
      * ========================================================
      * DOM
@@ -504,33 +629,60 @@
 
     if (!qrId) {
 
-      qrText.textContent =
-        'Mã QR: Không xác định';
+  qrText.textContent =
+    'Mã QR: Không xác định';
 
 
-      setStatus(
-        'Thiếu mã QR. Vui lòng mở lại từ mã QR hợp lệ.',
-        true
-      );
+  setStatus(
+    'Thiếu mã QR. Vui lòng mở lại từ mã QR hợp lệ.',
+    true
+  );
 
-    } else {
+} else {
 
-      qrText.textContent =
-        'Mã QR: ' +
-        qrId;
-
-
-      setStatus(
-        ''
-      );
+  qrText.textContent =
+    'Mã QR: ' +
+    qrId;
 
 
-      window.addEventListener(
-        'load',
-        initGoogleLogin
-      );
+  setStatus(
+    ''
+  );
+
+
+  window.addEventListener(
+    'load',
+    function() {
+
+      /*
+       * Ưu tiên xử lý Session Callback
+       * trước khi khởi tạo Google Login.
+       */
+
+      const handled =
+        handleSessionCallback();
+
+
+      if (
+        handled
+      ) {
+
+        return;
+
+      }
+
+
+      /*
+       * Chưa có Session Callback
+       * → tiếp tục Google Login bình thường.
+       */
+
+      initGoogleLogin();
 
     }
+  );
+
+}
 
   </script>
 
